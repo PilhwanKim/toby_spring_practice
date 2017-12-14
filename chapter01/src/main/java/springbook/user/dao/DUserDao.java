@@ -7,9 +7,10 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Created by pilhwankim on 15/12/2017.
+ * 이 클래스는 오직 Connection 에 대한 관심사만 분리됨(상속 subclass)
  */
-public class DUserDao extends UserDao {
+public class DUserDao extends AbstractUserDao {
+
     public Connection getConnection() throws ClassNotFoundException, SQLException {
         Class.forName("com.mysql.jdbc.Driver");
         Connection c = DriverManager.getConnection("jdbc:mysql://localhost/springbook", "spring", "book");
@@ -22,7 +23,7 @@ public class DUserDao extends UserDao {
         user.setName("김필환");
         user.setPassword("secret1!");
 
-        UserDao userDao = new DUserDao();
+        AbstractUserDao userDao = new DUserDao();
         userDao.add(user);
 
         System.out.println(user.getId() + "등록 성공");

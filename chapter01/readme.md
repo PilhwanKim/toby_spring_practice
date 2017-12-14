@@ -94,3 +94,21 @@ DAO(Data Access Object)는 DB를 사용해 데이터를 조회하거나 조작�
             - 적용할 상황
             - 해결해야 할 문제
             - 솔루션의 구조와 각 요소의 역할
+
+
+## 1.3. DAO의 확장
+
+### 1.3.1. 클래스의 분리
+
+* 좀 더 다른 방식으로 분리해보자!
+    * 서로 독립적인 class 로 존재하게
+    * composition(합성) 방식
+    
+* 하지만 합성으로 특성 클래스에 종속된다면?
+    * SimpleConnectionMaker 의 makeNewConnection() 을 이름 변경만 있어도 UserDao가 변경이 일어남.
+    * 다른종류의 SimpleConnectionMaker 와 바꾸려면? UserDao도 변경이 일어남(아래 요부분)
+    ```java
+    public UserDao() {
+        this.simpleConnectionMaker = new SimpleConnectionMaker();
+    }
+    ```
