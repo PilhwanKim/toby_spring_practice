@@ -5,14 +5,16 @@ import springbook.user.domain.User;
 import java.sql.*;
 
 /**
- * Created by pilhwankim on 13/12/2017.
+ * UserDao - 1장은 DB connection 관심사를 어떻게 분리할 것인가에 대해 다루면서 조금씩 코드가 개선 중이다.
  */
 public class UserDao {
 
     private ConnectionMaker connectionMaker;
 
-    public UserDao() {
-        this.connectionMaker = new NConnectionMaker();
+    // 생성자에서 자신이 의존하는 class(ConnectionMaker)를 받도록 되어 있다.
+    // 이렇게 구현하면 UserDao의 클라이언트 코드 측에서 ConnectionMaker의 구헌 class 를 선택하도록 할 수 있다.
+    public UserDao(ConnectionMaker connectionMaker) {
+        this.connectionMaker = connectionMaker;
     }
 
     public void add(User user) throws ClassNotFoundException, SQLException {
@@ -50,23 +52,6 @@ public class UserDao {
         c.close();
 
         return user;
-    }
-
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("leon0517");
-        user.setName("김필환");
-        user.setPassword("secret1!");
-
-        UserDao userDao = new UserDao();
-        userDao.add(user);
-
-        System.out.println(user.getId() + "등록 성공");
-
-        User user2 = userDao.get(user.getId());
-        System.out.println(user2.getName());
-        System.out.println(user2.getPassword());
-        System.out.println(user2.getId() + "조회 성공");
     }
 
 }

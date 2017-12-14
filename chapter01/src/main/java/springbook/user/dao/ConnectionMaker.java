@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 
 /**
- * Created by pilhwankim on 15/12/2017.
+ * 인터페이스로 db connection 관심사를 분리, 추상화 함.
  */
 public interface ConnectionMaker {
     Connection makeConnection() throws ClassNotFoundException, SQLException;
