@@ -1,4 +1,4 @@
-package springbook.user.dao;
+package springbook.user.dao.inheritance;
 
 import springbook.user.domain.User;
 
