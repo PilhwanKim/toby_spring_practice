@@ -7,7 +7,7 @@ import java.sql.*;
 /**
  * Created by pilhwankim on 13/12/2017.
  */
-public class UserDao {
+public abstract class UserDao {
     public void add(User user) throws ClassNotFoundException, SQLException {
         Connection c = getConnection();
 
@@ -45,28 +45,7 @@ public class UserDao {
         return user;
     }
 
-
-    private Connection getConnection() throws ClassNotFoundException, SQLException {
-        Class.forName("com.mysql.jdbc.Driver");
-        Connection c = DriverManager.getConnection("jdbc:mysql://localhost/springbook", "spring", "book");
-        return c;
-    }
-
-    public static void main(String[] args) throws SQLException, ClassNotFoundException {
-        User user = new User();
-        user.setId("leon0517");
-        user.setName("김필환");
-        user.setPassword("secret1!");
-
-        UserDao userDao = new UserDao();
-        userDao.add(user);
-
-        System.out.println(user.getId() + "등록 성공");
-
-        User user2 = userDao.get(user.getId());
-        System.out.println(user2.getName());
-        System.out.println(user2.getPassword());
-        System.out.println(user2.getId() + "조회 성공");
-    }
+    // 중복코드를 같은 클래스 안의 하나의 메소드로 추출함.
+    public abstract Connection getConnection() throws ClassNotFoundException, SQLException;
 
 }
