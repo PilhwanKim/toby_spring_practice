@@ -183,3 +183,89 @@ DAO(Data Access Object)는 DB를 사용해 데이터를 조회하거나 조작�
         * 구체적인 알고리즘을 인터페이스 구현을 해서 필요에 따라 바꿔서 사용할 수 있게 하는
         * 디자인 패턴
 * 스프링의 역할 - 위의 객체지향적인 설계 원칙과 디자인 패턴에 나타난 장점을 자연스럽게 개발자들이 활용할 수 있게 해주는 프레임워크
+
+## 1.4. 제어의 역전(Inversion of Control)
+
+### 1.4.1. 오브젝트 팩토리
+ 
+* UserDaoTest
+    * 실은 2가지 책임을 떠맡고 있다.
+        * 기능이 잘 동작하는지 Test
+        * UserDao 와 ConnectionMaker 생성 및 관계 설정
+    * 위의 2가지 역할을 분리해보자!
+
+* 팩토리 - 객체의 생성 방법을 결정하고 그렇게 만들어진 오브젝트를 돌려주는 역할
+    * UserDaoTest -> DaoFactory / UserDaoTest (분리 작업)
+    
+* 설계도로서의 팩토리
+    * 실질적인 로직역할 - UserDao, ConnectionMaker
+    * 에플리케이션을 구성하는 컴포넌트의 구조와 관계를 정의한 설계도 - DaoFactory
+    그림
+    
+### 1.4.2. 오브젝트 팩토리의 활용
+
+* Dao 가 여러개로 늘어나면 DaoFactory는?
+    ```java
+    package springbook.user.dao;
+    
+    public class DaoFactory {
+        public UserDao userDao() {
+            return new UserDao(new DConnectionMaker());
+        }
+        public AccountDao userDao() {
+            return new AccountDao(new DConnectionMaker());   
+        }
+        public MessageDao userDao() {
+            return new MessageDao(new DConnectionMaker());
+        }
+    }
+    ```
+* new DConnectionMaker() 코드의 중복 현상 발생
+* 해결책은?
+    ```java
+    package springbook.user.dao;
+    
+    public class DaoFactory {
+        public UserDao userDao() {
+            return new UserDao(connectionMaker());
+        }
+        public AccountDao userDao() {
+            return new AccountDao(connectionMaker());   
+        }
+        public MessageDao userDao() {
+            return new MessageDao(connectionMaker());
+        }
+        public ConnectionMaker connectionMaker() {
+            return new DConnectionMaker();
+        }
+    }
+    ```
+    
+    
+### 1.4.3. 제어권의 이전을 통한 제어관계 역전
+
+* 제어의 역전이란?
+    * 간단하게 프로그램의 제어 흐름 구조를 뒤바꾸는 것
+    * 일반적인 흐름 - main() 메소드에 프로그램 시작접, 오브젝트 생성, 관계 설정, 호출. 절차적인 프로그래밍
+    * 제어의 역전은? 흐름을 거꾸로 뒤집음.
+        * 오브젝트 자신이 사용할 오브젝트를 ***스스로 선택, 생성*** 하지 않음
+        * 자신도 어떻게 만들어지고 어디서 사용되는지 알 수 없음.
+        * 모든 제어권한을 자신이 아닌 다른 대상에 위임
+        * 모든 오브젝트가 위임받은 제어 권한을 갖는 특별한 오브젝트에 의해 결정되고 만들어짐
+    * 제어의 역전이 적용된 예
+        * 서블릿
+            * 제어의 권한은 서블릿 컨테이너가 가짐
+            * 사용되는 대로 서블릿의 코드가 실행됨
+        * 템플릿 메소드 패턴
+            * 추상 UserDao를 상속한 서브클래스는 getConnection 이 언제 사용될지 자신은 모름
+            * 상위 UserDao 가 제어의 권한을 가짐
+        * 프레임워크
+            * 라이브러리 - 에플리케이션 코드가 직접 흐름을 제어하는 중에 필요한 기능이 있을때 능동적으로 라이브러리를 호출함
+            * 프레임워크 - 거꾸로 에플리케이션 코드가 프레임워크에 의해 사용됨
+    * UserDao 예제에는?
+        * 처음에는 ConnectionMaker의 구현클래스를 결정하고 만드는 제어권은 UserDao에게 있었음
+        * 현재는 DaoFactory 에 옮겨짐
+        * 제어 권한을 DaoFactory 에 넘겼으니 UserDao는 제어에 수동적인 존재가 됨
+        * UserDaoTest도 DaoFactory가 공급해주는 오브젝트를 받아야 함으로 수동적인 존재가 됨
+        * 이것이 제어의 역전이 일어난 상황
+    * 결국 스프링은? IoC의 끝판왕(모든 오브젝트의 생성, 관계설정, 선택, 소멸 등 제어를 관장하는 프레임워크)
