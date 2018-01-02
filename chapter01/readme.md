@@ -448,3 +448,52 @@ DI(Dependency Injection)란?
         * 클래스 모델이나 코드에는 런타임 시점의 의존관계가 드러나지 않는다. 그러기 위해서는 **인터페이스에만 의존**해야 한다.
         * 런타임 시점의 의존관계는 컨테이너나 팩토리 같은 **제3의 존재가 결정**(DaoFactory, ApplicationContext 등)한다.
         * 의존관계는 **사용할 오브젝트에 대한 레퍼런스를 외부에서 제공(주입)**해줌으로써 만들어진다.
+
+### 1.7.3. 의존관계 검색과 주입
+
+* dependency lookup
+  * 외부로부터의 주입이 아니라 스스로 검색을 이용
+  * 자신이 필요로 하는 의존 오브젝트를 능동적으로 찾음
+  * 자신이 어떤 클래스의 오브젝트를 이용할지 결정하지 않음
+  * 런타임 시 의존관계를 맺을 오브젝트를 결정하는 것과 오브젝트의 생성작업은 외부 컨테이너에게 IoC로 맞김
+  * 의존관계를 가져오는 메소드나 생성자를 통한 주입 대신 스스로 컨테이너에 요청하는 방법
+
+DaoFactory로 의존관계 오브젝트를 가져오는 코드
+
+```java
+    public UserDao() {
+        DaoFactory daoFactory = new DaoFactory();
+        this.connectionMaker = daoFactory.connectionMaker();
+    }
+```
+
+스프링 ApplicationContext로 가져오는 코드
+
+```java
+    public UserDao() {
+        AnnotationConfigAppcationContext context = new AnnotationConfigAppcationContext(DaoFactory.class);
+        this.connectionMaker = context.getBean("connectionMaker", ConnectionMaker.class);
+    }
+```
+
+* dependency injection(의존관계 주입) vs dependency lookup(의존관계 검색)
+  * 의존관계 검색은 오브젝트 펙토리 클래스나 스프링 API가 기존 코드안에 사용됨
+  * 고로 코드가 깔끔하지 못하고 클래스간 역할분리가 완벽하지 않다.
+  * 의존관계 검색방식을 이용해야 하는경우
+    * 등록된 빈을 직접 가져와야 하는경우 - 예) UserDaoTest
+    * 가져오는 대상이 빈에 등록되지 않는 경우
+
+### 1.7.4. 의존관계 주입의 응용
+
+* 기능 구현의 교환
+  * ConnectionMaker의 다양한 활용
+    * 개발용 ConnectionMaker
+    * QA용 ConnectionMaker
+    * 운영용 ConnectionMaker
+  * DI 설정 1가지만 바꾸면 간편하다.
+* 부가 기능 추가
+  * DAO 가 DB를 연결한 수를 카운트한다.
+  * Decorator Pattern 을 적용
+  * 아래 그림과 같이 Decorator역할의 CountingConnectionMaker 오브젝트를 DI 하면 끝!
+
+![그림 1-15](readme_images/1-15.png)

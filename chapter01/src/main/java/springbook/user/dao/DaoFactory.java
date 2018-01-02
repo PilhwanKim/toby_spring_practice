@@ -14,4 +14,15 @@ public class DaoFactory {
     public ConnectionMaker connectionMaker() {
         return new DConnectionMaker();
     }
+
+    // 1.7.4 의존관계 주입의 응용 - 기능 추가(커넥션 횟수 카운트 기능)
+    @Bean
+    public ConnectionMaker countingConnectionMaker() {
+        return new CountingConnectionMaker(connectionMaker());
+    }
+
+    @Bean
+    public UserDao userDaoWithCounting() {
+        return new UserDao(countingConnectionMaker());
+    }
 }
