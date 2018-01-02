@@ -425,6 +425,7 @@ DI(Dependency Injection)란?
 ### 1.7.2. 런타임 의존관계 설정
 
 * 의존관계란?
+
     ![그림 1-10](readme_images/1-10.png)
     * A 가 B에 의존한다 - 그림 1-10
     * 의존대상(여기서 B) 가 변하면 그것이 A에 영향을 미침
@@ -434,6 +435,7 @@ DI(Dependency Injection)란?
         * B는 A의 변화에 영향받지 않음
 
 * UserDao 예제
+
     ![그림 1-11](readme_images/1-11.png)
     *  UserDao 가 ConnectionMaker 에 의존하고 있음
     *  ConnectionMaker 인터페이스가 변한다면 그 영향을 UserDao 가 받음
