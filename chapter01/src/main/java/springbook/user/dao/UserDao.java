@@ -11,6 +11,9 @@ public class UserDao {
 
     private ConnectionMaker connectionMaker;
 
+    // 수정자 메소드를 이용한 주입을 위해 default 생성자 도입
+    public UserDao() { }
+
     // 생성자에서 자신이 의존하는 class(ConnectionMaker)를 받도록 되어 있다.
     // 이렇게 구현하면 UserDao의 클라이언트 코드 측에서 ConnectionMaker의 구헌 class 를 선택하도록 할 수 있다.
     public UserDao(ConnectionMaker connectionMaker) {
@@ -54,4 +57,7 @@ public class UserDao {
         return user;
     }
 
+    public void setConnectionMaker(ConnectionMaker connectionMaker) {
+        this.connectionMaker = connectionMaker;
+    }
 }

@@ -85,11 +85,11 @@
       * fragile base class(깨지기 쉬운 기반 클래스 문제) - 자세한 내용은 검색!
         * UserDao 의 변화가 클수록, NUserDao 가 의도치 않은 사이드 이펙트가 날수 있음
 
-  > 디자인 패턴에서 가장 중요한 것은?
-  >   - __**__목적과 의도__**__
-  >   - 적용할 상황
-  >   - 해결해야 할 문제
-  >   - 솔루션의 구조와 각 요소의 역할
+> 디자인 패턴에서 가장 중요한 것은?
+> - __**__목적과 의도__**__
+> - 적용할 상황
+> - 해결해야 할 문제
+> - 솔루션의 구조와 각 요소의 역할
 
 ## 1.3. DAO의 확장
 
@@ -487,3 +487,23 @@ DaoFactory로 의존관계 오브젝트를 가져오는 코드
   * 아래 그림과 같이 Decorator역할의 CountingConnectionMaker 오브젝트를 DI 하면 끝!
 
 ![그림 1-15](readme_images/1-15.png)
+
+### 1.7.5. 메소드를 이용한 의존관계 주입
+
+* 지금까지는 의존관계 주입을 **생성자** 만 사용
+* 3가지 의존관계 주입 방식이 존재함
+  * 생성자
+  * 수정자 메소드를 이용한 주입(setter)
+  ```java
+    public class UserDao {
+        private ConnectionMaker connectionMaker;
+
+        public void setConnectionMaker(ConnectionMaker connectionMaker) {
+            this.connectionMaker = connectionMaker;
+        }
+    }
+  ```
+  * 일반 메소드를 이용한 주입
+    * 수정자 메소드의 제약 - 한 번에 한 개의 파라메터만 가짐. setXXX로 시작되는 네이밍
+    * 여러개의 파라메터로 의존관계 주입을 원한다면 이 방식을 사용
+* 전통적으로 대부분 **수정자** 방식을 주로 선호한다

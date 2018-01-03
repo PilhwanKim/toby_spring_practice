@@ -5,9 +5,19 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class DaoFactory {
+
+    // 생성자 DI 방식
+    @Bean
+    public UserDao userDaoByConstructor() {
+        return new UserDao(connectionMaker());
+    }
+
+    // 수정자 DI 방식
     @Bean
     public UserDao userDao() {
-        return new UserDao(connectionMaker());
+        UserDao userDao = new UserDao();
+        userDao.setConnectionMaker(connectionMaker());
+        return userDao;
     }
 
     @Bean
