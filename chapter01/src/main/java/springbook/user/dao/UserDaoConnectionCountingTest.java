@@ -13,13 +13,14 @@ import java.sql.SQLException;
 public class UserDaoConnectionCountingTest {
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
+        ApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
+        UserDao userDao = context.getBean("userDaoWithCounting", UserDao.class);
+
         User user = new User();
         user.setId("leon0517");
         user.setName("김필환");
         user.setPassword("secret1!");
-
-        ApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
-        UserDao userDao = context.getBean("userDaoWithCounting", UserDao.class);
+        userDao.add(user);
 
         System.out.println(user.getId() + "등록 성공");
 
