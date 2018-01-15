@@ -555,3 +555,29 @@ DaoFactory로 의존관계 오브젝트를 가져오는 코드
   ```java
   ApplicationContext ac = new ClassPathXmlApplicationContext("daoContext.xml", UserDao.class);
   ```
+
+### 1.8.3. DataSource 인터페이스로 전환
+
+* 사실 Spring 에는 ConnectionMaker 와 동일한 역할을 하는게 있다. 그것은 DataSource
+* 우리가 원하는 DataSource 구현체들은 이미 다 구현되어 있고, 안정적이다.
+* connectionMaker를 스프링의 DataSource로 바꿔서 사용해보자
+
+### 1.8.4. 프로퍼티 값의 주입
+
+* 다른 오브젝트의 레퍼런스만이 주입할 수 있는 것은 아니다.
+* 오브젝트가 아닌 단순 값을 DI 한다. (String, Integer 등등)
+* 예) Datasource에 DB connection 정보를 주입한다.
+  * JavaConfig 방식
+  ```java
+    dataSource.setDriverClass(com.mysql.jdbc.Driver.class);
+    dataSource.setUrl("jdbc:mysql://localhost/springbook");
+    dataSource.setUsername("spring");
+    dataSource.setPassword("book");
+  ```
+  * XML 방식
+  ```xml
+    <property name="driverClass" value="com.mysql.jdbc.Driver"/>
+    <property name="url" value="jdbc:mysql://localhost/springbook"/>
+    <property name="username" value="spring"/>
+    <property name="password" value="book"/>
+  ```

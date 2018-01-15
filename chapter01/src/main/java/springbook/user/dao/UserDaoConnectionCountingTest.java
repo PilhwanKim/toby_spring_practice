@@ -10,6 +10,7 @@ import java.sql.SQLException;
  * 1.7.4 의존관계 주입의 응용 - 기능 추가(커넥션 횟수 카운트 기능)
  * 커넥션 카운트 기능의 TestCase
  */
+@Deprecated
 public class UserDaoConnectionCountingTest {
 
     public static void main(String[] args) throws SQLException, ClassNotFoundException {
