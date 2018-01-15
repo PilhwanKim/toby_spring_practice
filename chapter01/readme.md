@@ -507,3 +507,51 @@ DaoFactory로 의존관계 오브젝트를 가져오는 코드
     * 수정자 메소드의 제약 - 한 번에 한 개의 파라메터만 가짐. setXXX로 시작되는 네이밍
     * 여러개의 파라메터로 의존관계 주입을 원한다면 이 방식을 사용
 * 전통적으로 대부분 **수정자** 방식을 주로 선호한다
+
+## 1.8. XML을 이용한 설정
+
+* 오브젝트 사이의 의존관게 설정
+  * DaoFactory와 같은 자바 코드 방식
+  * XML 설정 방식
+    * 단순한 텍스트라 다루기 쉬움
+    * 자바 컴파일과 같은 빌드가 필요 없음
+    * 빠르게 변경사항을 반영이 가능
+
+### 1.8.1. XML 설정
+
+* 하나의 bean 안의 DI 정보
+  * 빈의 이름 : getBean() 에서 가져올 때 사용
+  * 빈의 클래스 : 빈 오브젝트를 어떤 클래스를 이용해서 만들지 결정
+  * 빈의 의존 오브젝트 : 빈의 생성자, 수정자 메소드를 통해 의존 오브젝트를 넣어줌. 의존 오브젝트도 하나의 빈이므로 이름이 이을 것이고, 그 이름에 해당하는 메소드를 호출하여 의존 오브젝트를 가져옴.
+    * name 에트리뷰트 - DI에 사용할 수정자 메ㅔ소드의 프로퍼티 이름
+    * ref 에트리뷰트 - 주입할 오브젝트를 정의한 빈의 ID
+
+* 클래스 설정과 XML 설정의 대응항목
+
+|        | 자바 코드 설정정보              | XML 설정정보                  |
+| ------ | ----------------------- | ------------------------- |
+| 빈 설정파일 | @Configuration          | <beans>                   |
+| 빈의 이름  | @Bean methodName()      | <bean id=""methodName"    |
+| 빈의 클래스 | return new BeanClass(); | clsss="a.b.c...BeanClass> |
+
+* connectionMaker() 메소드의 <bean> 태그로 전환
+
+### 1.8.2. XML 을 이용하는 ApplicationContext
+
+* GenericXmlApplicationContext
+  * 생성자에 applicationContext.xml 의 클래스패스를 넣음
+  * 루트 기준 or 실행되는 class 기준의 클래스패스
+  * 예1) / 가 붙을경우 코드가 실행되는 패키지를 기준으로 찾음. 같은 패키지의 applicationContext.xml 이 있으면 설정정보 로딩
+  ```java
+  ApplicationContext ac = new GenericXmlApplicationContext("/applicationContext.xml");
+  ```
+  * 예2) / 가 없을 경우 클래스패스의 루트에서 applicationContext.xml 찾음
+  ```java
+  ApplicationContext ac = new GenericXmlApplicationContext("applicationContext.xml");
+  ```
+* ClassPathXmlApplicationContext
+  * 인자로 넘기는 class 오브젝트의 패키지기준으로 xml 파일 path 지정함.
+  * 예3)
+  ```java
+  ApplicationContext ac = new ClassPathXmlApplicationContext("daoContext.xml", UserDao.class);
+  ```
