@@ -2,9 +2,13 @@ package springbook.user.dao;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.support.GenericXmlApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import springbook.user.domain.User;
 
 import java.sql.SQLException;
@@ -15,7 +19,12 @@ import static org.hamcrest.CoreMatchers.is;
 /**
  * Created by pilhwankim on 15/12/2017.
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(locations = "/applicationContext.xml")
 public class UserDaoTest {
+    @Autowired
+    private ApplicationContext context;
+
     private UserDao dao;
     private User user1;
     private User user2;
@@ -23,8 +32,10 @@ public class UserDaoTest {
 
     @Before
     public void setUp() {
-        ApplicationContext ac = new GenericXmlApplicationContext("applicationContext.xml");
-        this.dao = ac.getBean("userDao", UserDao.class);
+        // 실제로 어플리케이션 컨텍스트가 1번 만들어지는지 확인하는 코드
+//        System.out.println(this.context);
+//        System.out.println(this);
+        this.dao = context.getBean("userDao", UserDao.class);
 
         this.user1 = new User("pilhwankim", "김필환", "secret2@");
         this.user2 = new User("leegm700", "이길원", "springno1");
