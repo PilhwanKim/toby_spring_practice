@@ -1,16 +1,19 @@
-package springbook.user.sandbox;
+package springbook.sandbox;
 
+import org.junit.Assert;
+import org.junit.Test;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import springbook.user.dao.DaoFactory;
 import springbook.user.dao.UserDao;
+
+import static org.hamcrest.CoreMatchers.sameInstance;
  
 public class SingletonTest {
-	public static void main(String[] args) {
+	@Test
+	public void testSingletonInSpringContext() {
 		ApplicationContext context = new AnnotationConfigApplicationContext(DaoFactory.class);
-		
-		System.out.println(context.getBean("userDao", UserDao.class));
-		System.out.println(context.getBean("userDao", UserDao.class));
+		Assert.assertThat(context.getBean("userDao", UserDao.class), sameInstance(context.getBean("userDao", UserDao.class)));
 	}
 } 

@@ -16,7 +16,7 @@ import static org.hamcrest.CoreMatchers.is;
 public class UserDaoTest {
 
     @Test
-    public void main() throws SQLException {
+    public void addAndGet() throws SQLException {
         ApplicationContext ac = new GenericXmlApplicationContext("/applicationContext.xml");
         UserDao userDao = ac.getBean("userDao", UserDao.class);
 
