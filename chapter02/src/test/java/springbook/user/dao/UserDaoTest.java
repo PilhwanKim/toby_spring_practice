@@ -4,39 +4,33 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.GenericXmlApplicationContext;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.datasource.SimpleDriverDataSource;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import springbook.user.domain.User;
 
 import java.sql.SQLException;
 
-import static org.junit.Assert.assertThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 
 /**
  * Created by pilhwankim on 15/12/2017.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(locations = "/applicationContext.xml")
+@ContextConfiguration(locations = "/applicationContext-test.xml")
 public class UserDaoTest {
-    @Autowired
-    private ApplicationContext context;
 
+    @Autowired
     private UserDao dao;
+
     private User user1;
     private User user2;
     private User user3;
 
     @Before
     public void setUp() {
-        // 실제로 어플리케이션 컨텍스트가 1번 만들어지는지 확인하는 코드
-//        System.out.println(this.context);
-//        System.out.println(this);
-        this.dao = context.getBean("userDao", UserDao.class);
-
         this.user1 = new User("pilhwankim", "김필환", "secret2@");
         this.user2 = new User("leegm700", "이길원", "springno1");
         this.user3 = new User("bumjin", "박범진", "springno2");
@@ -44,7 +38,6 @@ public class UserDaoTest {
 
     @Test
     public void addAndGet() throws SQLException {
-
         dao.deleteAll();
         assertThat(dao.getCount(), is(0));
 
