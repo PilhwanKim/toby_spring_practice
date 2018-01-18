@@ -4,8 +4,10 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import springbook.user.domain.User;
 
 import javax.sql.DataSource;
-import javax.xml.crypto.Data;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 /**
  * UserDao - 1장은 DB connection 관심사를 어떻게 분리할 것인가에 대해 다루면서 조금씩 코드가 개선 중이다.
@@ -96,31 +98,8 @@ public class UserDao {
     }
 
     public void deleteAll() throws SQLException {
-        Connection c = null;
-        PreparedStatement ps = null;
-        try {
-            c = dataSource.getConnection();
-            ps = c.prepareStatement("delete from users");
-            ps.executeUpdate();
-        } catch (SQLException e){
-            throw e;
-        } finally {
-            if(ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e){ }
-                /*
-                ps.close() 메소드에도 SQLException이 발생할 수 있기 때문에 이를 잡아줘야 한다.
-                그렇지 않으면 Connection close() 하지 못하고 메소드를 빠져나가게 된다.
-                */
-            }
-            if(c != null) {
-                try {
-                    c.close();
-                } catch (SQLException e){ }
-            }
-        }
-
+        StatementStrategy st = new DeleteAllStatement();
+        jdbcContextWithStatementStrategy(st);
     }
 
     public int getCount() throws SQLException {
@@ -159,6 +138,33 @@ public class UserDao {
                 } catch (SQLException e){ }
             }
         }
+    }
+
+    public void jdbcContextWithStatementStrategy(StatementStrategy stmt) throws SQLException {
+        Connection c = null;
+        PreparedStatement ps = null;
+
+        try {
+            c = dataSource.getConnection();
+
+            ps = stmt.makePrearedStatement(c);
+
+            ps.executeUpdate();
+        } catch (SQLException e){
+            throw e;
+        } finally {
+            if(ps != null) {
+                try {
+                    ps.close();
+                } catch (SQLException e){ }
+            }
+            if(c != null) {
+                try {
+                    c.close();
+                } catch (SQLException e){ }
+            }
+        }
+
     }
 
     public void setDataSource(DataSource dataSource) { this.dataSource = dataSource; }
