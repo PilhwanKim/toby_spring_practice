@@ -76,7 +76,7 @@
     * 개방 폐쇄 원칙을 잘 지킴
     * 템플릿 메소드 패턴보다 유연하고 확장성이 뛰어남
 
-  ![전략 패턴의 구조](images/3-2.PNG)
+  ![전략 패턴의 구조](images/3-2.png)
 
   * deleteAll() 컨텍스트 정리
     * DB 커넥션 가져오기
@@ -121,7 +121,7 @@
   * 하지만 이렇게 Context 안에서 이미 구체적인 전략 클래스인 DeleteAllStatement 가 고정되어 있으면 전략패턴의 취지를 살리지 못함
   * Context 가 어떤 전략을 사용할지 정하는 것은 Context 를 사용하는 Client 가 결정하는게 더 유연한 디자인이 된다.
 
-  ![전략 패턴에서 Client의 역할](images/3-3.PNG)
+  ![전략 패턴에서 Client의 역할](images/3-3.png)
 
   * 위와같은 방식으로 되려면? StatementStrategy를 컨텍스트 메소드의 파라메터로 지정하면 해결된다.
 
