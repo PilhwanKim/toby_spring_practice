@@ -156,3 +156,39 @@
 * UserDao의 add() 메서드 적용
   * add() 도 동일한 과정을 거침
   * 차이점은 add 할 대상 User 오브젝트를 StatementStrategy의 생성자에서 받음
+
+### 3.3.2. 전략과 클라이언트와의 동거
+
+* 현재의 불만점
+  * DAO 메소드마다 새로운 StatementStrategy 구현 클래스가 만들어져야 한다
+  * add()메소드의 User 처럼 부가정보가 필요할 경우에 오브젝트를 전달 받는 생성자와 이를 저장해둘 인스턴스 변수를 번거롭게 만들어야 함
+* 해결책
+  * 로컬 클래스
+    * StatementStrategy 구현 클래스를 UserDao 클래스 안의 내부 클래스로 구현함
+    * 어짜피 특정 StatementStrategy 구현 클래스는 UserDao의 메소드 로직과 강하게 결합되어 있기 때문
+    * 로컬 클래스는 선언된 클래스 안에서만 사용할 수 있다
+    * 또한 로컬클래스는 내부 클래스이기 때문에 자신이 선언된 곳의 정보에 접근할 수 있음
+      * User 직접 전달 필요없음(User final 선언 후 접근가능)
+  ```java
+    public void add(final User user) throws SQLException {
+        class AddStatement implements StatementStrategy{
+
+            @Override
+            public PreparedStatement makePreparedStatement(Connection c) throws SQLException {
+                PreparedStatement ps = c.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
+                ps.setString(1, user.getId());
+                ps.setString(2, user.getName());
+                ps.setString(3, user.getPassword());
+                return ps;
+            }
+        }
+        StatementStrategy st = new AddStatement();
+        jdbcContextWithStatementStrategy(st);
+    }
+  ```
+
+  * 익명 내부 클래스
+    * 이름을 붙이지 않은 클래스
+    * 클래스 선언과 오브젝트 생성이 결합된 형태로 만들어짐
+    * 클래스를 재사용할 필요가 없고 구현한 인터페이스 타입으로만 사용할 경우에 유용
+    * 좀 더 간략하게 익명 내부클래스로 add() 와 deleteAll() 을 변경한다
