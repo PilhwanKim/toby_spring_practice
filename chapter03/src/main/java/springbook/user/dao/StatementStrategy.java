@@ -5,5 +5,5 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
 public interface StatementStrategy {
-    PreparedStatement makePrearedStatement(Connection c) throws SQLException;
+    PreparedStatement makePreparedStatement(Connection c) throws SQLException;
 }

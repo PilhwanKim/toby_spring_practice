@@ -17,35 +17,8 @@ public class UserDao {
     private DataSource dataSource;
 
     public void add(User user) throws SQLException {
-        Connection c = null;
-        PreparedStatement ps = null;
-        try {
-            c = dataSource.getConnection();
-
-            ps = c.prepareStatement("insert into users(id, name, password) values(?, ?, ?)");
-            ps.setString(1, user.getId());
-            ps.setString(2, user.getName());
-            ps.setString(3, user.getPassword());
-
-            ps.executeUpdate();
-        } catch(SQLException e) {
-            throw e;
-        } finally {
-            if(ps != null) {
-                try {
-                    ps.close();
-                } catch (SQLException e){ }
-                /*
-                ps.close() 메소드에도 SQLException이 발생할 수 있기 때문에 이를 잡아줘야 한다.
-                그렇지 않으면 Connection close() 하지 못하고 메소드를 빠져나가게 된다.
-                */
-            }
-            if(c != null) {
-                try {
-                    c.close();
-                } catch (SQLException e){ }
-            }
-        }
+        StatementStrategy st = new AddStatement(user);
+        jdbcContextWithStatementStrategy(st);
     }
 
     public User get(String id) throws SQLException {
@@ -147,7 +120,7 @@ public class UserDao {
         try {
             c = dataSource.getConnection();
 
-            ps = stmt.makePrearedStatement(c);
+            ps = stmt.makePreparedStatement(c);
 
             ps.executeUpdate();
         } catch (SQLException e){
