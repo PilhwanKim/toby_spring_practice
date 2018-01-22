@@ -1,10 +1,7 @@
 package springbook.user.dao;
 
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCreator;
-import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.lang.Nullable;
 import springbook.user.domain.User;
@@ -21,13 +18,24 @@ import java.util.List;
  */
 public class UserDao {
 
-    private DataSource dataSource;
-
     private JdbcTemplate jdbcTemplate;
 
-    public void setJdbcTemplate(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public void setDataSource(DataSource dataSource) {
+        this.jdbcTemplate = new JdbcTemplate();
+        this.jdbcTemplate.setDataSource(dataSource);
     }
+
+    private final RowMapper<User> userMapper = new RowMapper<User>() {
+        @Nullable
+        @Override
+        public User mapRow(ResultSet rs, int rowNum) throws SQLException {
+            User user = new User();
+            user.setId(rs.getString("id"));
+            user.setName(rs.getString("name"));
+            user.setPassword(rs.getString("password"));
+            return user;
+        }
+    };
 
     public void add(final User user) {
         this.jdbcTemplate.update("insert into users(id, name, password) values(?, ?, ?)",
@@ -35,31 +43,11 @@ public class UserDao {
     }
 
     public List<User> getAll() {
-        return this.jdbcTemplate.query("select * from users order by id", new RowMapper<User>() {
-            @Nullable
-            @Override
-            public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-                User user = new User();
-                user.setId(rs.getString("id"));
-                user.setName(rs.getString("name"));
-                user.setPassword(rs.getString("password"));
-                return user;
-            }
-        });
+        return this.jdbcTemplate.query("select * from users order by id", this.userMapper);
     }
 
     public User get(String id) throws SQLException {
-        return this.jdbcTemplate.queryForObject("select * from users where id = ?", new Object[]{id}, new RowMapper<User>() {
-            @Nullable
-            @Override
-            public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-                User user = new User();
-                user.setId(rs.getString("id"));
-                user.setName(rs.getString("name"));
-                user.setPassword(rs.getString("password"));
-                return user;
-            }
-        });
+        return this.jdbcTemplate.queryForObject("select * from users where id = ?", new Object[]{id}, this.userMapper);
     }
 
     public void deleteAll() {
@@ -75,9 +63,4 @@ public class UserDao {
         return this.jdbcTemplate.queryForObject("select count(*) from users", Integer.class);
     }
 
-    public void setDataSource(DataSource dataSource) {
-        this.jdbcTemplate = new JdbcTemplate();
-        this.jdbcTemplate.setDataSource(dataSource);
-        this.dataSource = dataSource;
-    }
 }
