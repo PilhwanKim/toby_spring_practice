@@ -387,3 +387,20 @@
     * 차이점
       * ResultSetExtractor는 한 번 전달받아 알아서 추출 작업 진행
       * ResultSet 로우 하나를 매핑하기 위해 사용. row수 만큼 여러번 호출됨
+
+### 3.6.4. query()
+
+* getAll() 메소드 추가 - 테이블의 모든 User 로우를 가져온다
+* List<User> 타입으로 돌려줌
+* 먼저 getAll()을 검증하는 Test code 부터 작성(코드 참조)
+* getAll은 RowMapper 콜백 오브젝트에서 ResultSet에서 User로 변환하는 로직 작성
+* 기능 완성후 테스트 수행해보면 깔끔하게 성공한다.
+
+* 테스트 보완
+  * 만약 getAll의 결과가 없다면?
+    * null ?? Exception ?? 정하기 나름
+  * JdbcTempate의 query()는 결과가 없을 경우 크기가 0 인 List<T> 오브젝트 반환
+  * 이미 스프링에서 동작이 정해진 코드도 굳이 검증코드를 추가해야 하나?
+    * 테스트에서 관심있는 것은 getAll() 메소드의 실행 결과
+    * 중간에 getAll()의 구현을 바꿀 수도 있음. 그래서 test 코드는 필요
+    * 내부적으로 query()를 사용했다고 해도 결과를 getAll() 에서 바꿔서 구현했을 수도 있음
