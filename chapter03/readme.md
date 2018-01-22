@@ -192,3 +192,32 @@
     * 클래스 선언과 오브젝트 생성이 결합된 형태로 만들어짐
     * 클래스를 재사용할 필요가 없고 구현한 인터페이스 타입으로만 사용할 경우에 유용
     * 좀 더 간략하게 익명 내부클래스로 add() 와 deleteAll() 을 변경한다
+
+## 3.4. 컨텍스트와 DI
+
+### 3.4.1. JdbcContext의 분리
+
+* 현재까지의 상황 정리
+  * 클라이언트 - UserDao의 메소드
+  * 개별 전략 - 익명 내부 클래스
+  * 컨텍스트 - jdbcContextWithStatementStrategy() 메소드
+* jdbcContextWithStatementStrategy() 는 다른 DAO 에서도 사용 가능하다.
+* jdbcContextWithStatementStrategy() 를 UserDao에서 분리하면 다른 DAO도 쓸수 있다.
+* 소스코드 참조
+
+![JdbcContext로 분리된 클래스 다이어그램](images/3-4.png)
+
+![런타임 시에 만들어지는 오브젝트 레벨의 의존관계](images/3-5.png)
+
+* (주의)아직 모든 UserDao의 모든 메소드가 JdbcContext를 사용하는 것은 아님!
+
+### 3.4.2. JdbcContext의 특별한 DI
+
+* 스프링 bean으로 DI
+  * 인터페이스가 아닌 JdbcContext를 DAO 에 DI 해도 되는걸까? 인터페이스로 DI 해야하지 않을까?
+  * JdbcContext같이 클래스를 직접 DI 구조로 가야하는 이유
+    * JdbcContext를 싱글톤 빈으로 만들어야 하기 때문 (일종의 Service 오브젝트 성격)
+    * JdbcContext가 DI 를 통해 다른 bean(DataSource)에 의존하기 때문
+      * 스프링에서 DI를 하기 위해서 주입되는 오브젝트와 주입받는 오브젝트 둘다 bean으로 등록되어 있어야 함
+    * 인터페이스가 없는 이유는? JdbcContext와 Dao 사이에 강한 응집도를 가지기 때문
+  * But! 인터페이스 없이 클래스를 DI하는 상황은 늘 차선책으로 생각하고 개발할 것을 권유
