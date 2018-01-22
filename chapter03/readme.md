@@ -344,3 +344,46 @@
   * 좀 더 강력한 템플릿/콜백 구조를 만들려면?
   * 현재까지는 결과를 Integer 타입만 가능하게 고정되어 있음
   * 결과 타입을 다양하게 하고 싶다면? Generics(제네릭스)를 이용해 보자(코드 참고)
+
+## 3.6. 스프링의 JdbcTemplate
+
+* 이제까지 원리를 이해하기 위한 과정이었다. 모두 수고하셨습니다.
+* 하지만 스프링은 이미 DAO에서 사용할수 있는 jdbc용 템플릿이 이미 구현되어 있음
+* JdbcTempate - 스프링이 제공하는 JDBC 코드용 기본 템플릿
+* 지금까지 했던 JdbcContext는 버리고 JdbcTempate으로 변경하자!(소스 참고)
+
+### 3.6.1. update()
+
+* 앞서 만든 executeSql() 과 비슷한 메소드가 JdbcTemplate의 update()라는 메소드로 존재한다
+* 앞에서 구상만 하고 실제로 만들지 못했던 add() 메소드에 대한 편리한 템플릿 메소드도 제공됨.
+* 치환자(?) 를 가진 SQL 로 PremaredStatement를 만들고 함께 제공함
+
+### 3.6.2 queryForInt()
+
+* getCount()는 SQL 쿼리를 실행하고 ResultSet을 통해 결과 값을 가져오는 코드
+* 콜백이 2개 등장하는 조금 복잡해 보이는 구조
+* 첫번째 PreparedStatementCreator 콜백은 템플릿으로부터 Connection을 받고 PreparedStatement를 돌려줌
+* 두 번째 ResultSetExtractor 콜백은 템플릿으로부터 ResultSet을 받고 거기서 추출한 결과를 돌려줌
+* 결국 2번째 콜백에서 리턴하는 값은 결국 템플릿 메소드의 결과로 다시 리턴됨
+* ResultSetExtractor는 제너릭스 타입 파라미터를 갖는다
+* 즉 유연하고 재사용하기 쉬운 구조로 잘 되어있다
+* 이 제법 복잡해 보이는 구문도 한 줄로 바꿀 수 있다.(queryForInt로)
+* **그러나 queryForInt() 메소드는 에석하게 스프링 3.2.2. 이후로는 Deprecated 되어 버렸다**
+* 대신 queryForObject()로 대신할 수 있다.
+
+```java
+  public int getCount() throws SQLException {
+    return this.jdbcTemplate.queryForObject("select count(*) from users", Integer.class);
+  }
+```
+
+### 3.6.3. queryForObject()
+
+* 마지막으로 get() 메소드에 jdbcTemplate 을 적용하기(코드 참고)
+  * SQL에 바인딩이 필요한 치환자 필요
+  * ResultSet 을 Uesr 오브젝트로 변환
+  * ResultSetExtractor대신 RowMappper 콜백 사용
+    * 공통점 - 템플릿으로부터 ResultSet을 받아 필요한 정보를 추출한다
+    * 차이점
+      * ResultSetExtractor는 한 번 전달받아 알아서 추출 작업 진행
+      * ResultSet 로우 하나를 매핑하기 위해 사용. row수 만큼 여러번 호출됨
