@@ -105,3 +105,80 @@
         * RuntimeException 클래스와 그 서브 클래스
         * 명시적인 예외처리를 강제하지 않음. 즉 catch 문이나 throws 선언을 꼭 하지 않아도 됨
         * 주로 프로그램의 오류가 있을 때 발생하도록 의도한 것 - 예) NullPointerException
+
+### 4.1.3. 예외처리 방법
+
+* 예외 복구
+  * 예외상황을 파악하고 문제를 해결해서 정상 상태로 돌려놓는 것
+  * 예1) 사용자가 요청한 파일을 읽으려고 시도했는데 해당 파일이 없다거나 다른 문제가 있어 IOException이 발생
+    * 사용자에게 다른 파일을 이용하도록 안내함
+  * 예2) 네트워크가 불안해서 가끔 접속이 안되는 시스템. 원격DB 서버 접속 실패해서 SQLException이 발생한 경우
+    * 일정 시간 대기후 접속 재시도. 이것을 정해진 횟수만큼 시도. 실패했다면 복구 포기
+
+```java
+    int maxretry = MAX_RETRY;
+    while(maxretry -- >0) {
+        try {
+            ...     // 예외가 발생할 가능성이 있는 시도
+            return; // 작업 성공
+        catch(SomeException e) {
+            // 로그 출력. 정해진 시간만큼 대기
+        finally {
+            // 리소스 반납. 정리 작업
+        }
+        throw new RetryFailedException(); // 최대 재시도 횟수를 넘기면 직접 예외 발생.
+```
+
+* 예외 처리 회피
+  * 예외처리를 자신이 담당하지 않고 자신을 호출한 쪽으로 던져버리는 것
+  * throws문으로 선언해서 예외가 발생하면 알아서 던저지게 하거나 catch문으로 일단 예외를 잡은 후에 로그를 남기고 다시 예외를 던지는 것(rethrow)
+  * 자신이 사용하는 쪽에서 예외를 다루는게 최선의 방법일 때 사용
+  * 예) JdbcTemplate에서 사용하는 콜백 오브젝트는 ResultSet이나 PrepareStatement 등을 이용해서 작업하다 발생하는 SQLException을 자신이 처리하지 않고 템플릿으로 던져버림
+    * SQLException 처리는 콜백오브젝트의 역할이 아니라 템플릿의 역할이라고 생각하기 때문
+  * 이와같이 명확히 예외를 다루는 것이 자신이 사용하는 쪽에서 해야한다고 판단될때 써야한다.
+
+  * 예외처리 회피 1
+
+```java
+    public void add() throws SQLException {
+        // JDBC API
+    }
+```
+
+* 예외처리 회피2
+
+```java
+    public void add() throws SQLException {
+        try {
+            // JDBC API
+        } catch(SQLException e) {
+            // 로그 출력
+            throw e;
+        }
+    }
+```
+
+* 예외 전환(exeception translation)
+  * 발생한 예외를 그대로 넘기지 않고 적절한 예외로 전환해 던짐
+  * 보통 2가지 목적으로 사용
+    * 내부에 발생한 예외를 좀더 적절하고 분명한 의미를 가진 예외로 바꿔서 던지기 위해
+      * 예) 새로운 사용자를 등록하려고 시도했을 때 아이디가 같은 사용자가 있어 DB에서 JDBC API의 SQLException 발생시킴. DAO에서는 이 정보를 좀더 의미있게 해석해서 SQLException에러를 잡아서 DuplicationUserIdException 같은 예외를 정의해서 던짐.
+    * 예외를 처리하기 쉽고 단순하게 만들기 위해 포장하는 것
+      * 예외처리를 강제하는 체크예외를 언체크 예외(런타임 예외)로 바꾸는 경우
+      * 대부분 서버환경에서는 애플리케이션 코드에서 처리하지 않고 전달된 예외들을 일괄적으로 다룰수 있는 기능을 제공함
+      * 어차피 복구못할 예외라면 애플리케이션 코드에서는 런타임 예외로 포장해서 던지고 예외처리 서비스 등을 이용해 로그를 남기고, 관리자에게 메일로 통보, 사용자에게 안내 메시지를 보여주는 것이 바람직
+
+  * 체크 예외를 언체크 예외로 포장해서 던짐(SQLException -> EJBException)
+
+```java
+    try {
+        OrderHome orderHome = EJBHomeFactorY.getlnstance().getOrderHome();
+        Order order = orderHome.findByPrimaryKey(Integer id);
+    } catch (NamingException ne) (
+        throw new EJBException(ne);
+    } catch (SQLException se) (
+        throw new EJBException(se);
+    } catch (RemoteException re ) (
+        throw new EJBException(re)
+    }
+```
