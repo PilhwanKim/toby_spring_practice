@@ -79,3 +79,29 @@
 * 예외처리를 할때 반드시 지켜야 될 핵심 원칙(둘중에 하나가 되어야...)
   * 예외는 적절하게 복구
   * 작업을 중단시키고 운영자 또는 개발자에게 분명하게 통보
+
+### 4.1.2. 예외의 종류와 특징
+
+* 어떻게 처리해야 하는가? 오랫동안 논쟁이 되온 부분
+* 특히 체크 예외(cheched exception)의 명시적으로 처리가 필요한 예외를 다루는 방법이 큰 이슈였음
+
+* 예외는 크게 3가지 종류
+  * Error
+    * java.lang.Error 클래스와 그 서브 클래스
+    * VM에서 비정상적인 상황 발생할 경우
+    * 애플리케이션에서 해결할 수 없는 상황인 경우(OutOfMemoryError ThreadDeath 등)
+    * 개발자가 신경쓰지 않아도 됨
+  * Exception
+
+    ![Exception의 2가지 종류](images/4-1.PNG)
+
+    * java.lang.Exception 클래스와 그 서브 클래스
+    * 애플리케이션 코드 작업중에 예외상황이 발생할 경우에 사용
+    * 다시 체크예외와 언체크 예외로 나뉨
+      * Exception과 체크 예외
+        * RuntimeException을 상속하지 않음
+        * 반드시 catch문으로 예외를 잡아 처리하거나 throws 선언이 필요
+      * RuntimeException과 언체크/런타임 예외
+        * RuntimeException 클래스와 그 서브 클래스
+        * 명시적인 예외처리를 강제하지 않음. 즉 catch 문이나 throws 선언을 꼭 하지 않아도 됨
+        * 주로 프로그램의 오류가 있을 때 발생하도록 의도한 것 - 예) NullPointerException
