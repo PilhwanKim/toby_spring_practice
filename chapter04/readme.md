@@ -182,3 +182,125 @@
         throw new EJBException(re)
     }
 ```
+
+### 4.1.4. 예외처리 전략
+
+* 런타임 예외의 보편화
+  * 일반적으로 
+    * 체크 예외 - 일반적 예외
+    * 언체크 예외 - 시스템 장애나 프로그램상의 오류에 사용
+  * 예외처리 강제
+    * API 사용하는 개발자의 실수 방지를 위한 배려일수도
+    * 예외를 다루고 싶지 않은 귀차니즘의 원인 일수도
+  * 애플릿, AWT, 스윙 - 독립형 어플리케이션
+    * 통제 불가능한 시스템 예외라도 애플리케이션의 작업이 중단되지 않게 해주고 상황을 최대한 복구해야함
+  * 자바 엔터프라이즈 서버 환경
+    * 수많은 사용자 동시 요청을 처리해야 함
+    * 각 요청은 독립적 작업
+    * 하나의 요청 처리중 예외 발생시 해당 작업만 중단하면 됨
+    * 예외 발생시 사용자와 커뮤니케이션 하면서 복구할 수 있는 수단이 없음
+    * 예외 상황을 미리 파악하고, 예외가 발생치 않도록 차단하는 게 좋음
+    * 빨리 요청의 작업 취소 후, 서버 관리자나 개발자에게 통보해야 함
+    * 즉 체크예외는 점점 사용도가 떨어지고 있음
+    * 대부분 런타임 예외로 처리하는 경향
+    * 언체크라도 언제든지 예외를 catch로 잡을수도 있음. 즉 선택적이라 더더욱 런타임 에러로 처리
+
+* add() 메소드의 예외 처리
+
+```java
+    public void add(User user) throws DuplicateUserIdException, SQLException {
+        try {
+            // JDBC를 이용해 user 정보를 DB에 추가하는 코드 또는
+            // 그런 기능을 가진 다른 SQLException을 던지는 메소드를 호출하는 코드
+        } catch(SQLException e) {
+            // ErrorCode가 MySQL의 "Duplicate Entry(1062)"이면 예외 전환
+            if (e.QetErrorCode() == MysQIErrorNumbers.ER_DUP_ENTRY)
+                throw new DuplicateUserIdException();
+        } else
+            throw e; // 그 외의 경우는 SQLException 그대로
+```
+
+  * SQLException 은 대부분 복구 불가능한 예외이므로 throws 를 계속 이어가게 해는 것 보다 런타임 예외로 포장해 주는 것이 좋다.
+  * DuplicateUserIdException 도 굳이 체크 예외로 둘 필요가 없음. 어디에서는 잡아 처리할 수 있기 때문.
+  * 다만 명시적으로 throws는 선언하는게 좋음. 그래야 add() 메소드를 사용하는 개발자엑 의미 있는 정보가 전달됨
+  * 둘다 언체크 에외로 변환시키면 다음과 같이 코드를 바꿔야 함
+
+  * DuplicateUserldException 을 런타임 예외로 구현
+  ```java
+    public class DuplicateUserldException extends RuntimeException {
+        public DuplicateUserldException(Throwable cause) {
+            super (cause);
+        }
+    }
+  ```
+
+  * add() 메소드 코드
+
+  ```java
+    public void add(User user) throws DuplicateUserIdException {
+        try {
+            // JDBC를 이용해 user 정보를 DB에 추가하는 코드 또는
+            // 그런 기능을 가진 다른 SQLException을 던지는 메소드를 호출하는 코드
+        } catch(SQLException e) {
+            if (e.QetErrorCode() == MysQIErrorNumbers.ER_DUP_ENTRY)
+                throw new DuplicateUserIdException(e); // 예외 전환
+        } else
+            throw new RuntimeException(e); // 예외 포장
+  ```
+
+* 낙관적인 예외처리 기법
+  * 복구할 수 있는 예외는 없다는 가정
+  * 어짜피 시스템 레벨에서 알아서 처리
+  * 꼭 필요한 경우는 런타임 예외라도 잡아서 복구함
+* 비관적인 예외처리 기법
+  * 일단 잡고 보도록 강제하는 체크 예외
+
+* 애플리케이션 예외
+  * 애플리케이션 자체의 로직에 의해 의도적으로 발생시키고 반드시 catch해서 조치를 취하도록 요구하는 예외
+  * 예제) 사용자가 요청한 금액을 은행계좌에서 출금하는 기능을 가진 메소드
+    * 대략적인 로직
+      * 현재 잔고 확인
+      * 허용하는 범위를 넘어선 출금 요청시 출금작업 중단
+      * 경고를 사용자에게 보냄
+    * 메소드를 설계하는 2가지 방법
+      * 첫번째, 정상적인 출금처리를 했을 경우와 잔고 부족이 발생했을 경우에 각각 다른 종류의 리턴 값을 돌려준다.
+        * 정상 출금 - 리턴값이 요청금액 자체
+        * 잔고 부족 - 0또는 -1 같은 특별값 리턴
+        * 문제점
+          * 리턴값을 명확하게 코드화 하지 않으면 혼란이 생김
+          * 결과 값을 확인하는 조건문이 자주 등장함. 코드가 지저분해지고 흐름파악 힘듦.
+      * 두번째, 정상적 흐름을 따르는 코드는 그대로 두고, 잔고 부족과 같은 예외상황에서는 비즈니스적인 의미를 띈 예외를 던지도록 한다.
+        * 잔고 부족인 경우 - InsufficientBalenceException등을 던짐
+        * 의도적으로 체크예외를 둠 - 개발자가 잊지않고 특정상황에 대한 처리를 하게 함
+
+      ```java
+        try {
+            BigDecimal balance = account .withdraw(amount);
+            ...
+            // 정상적인 처리 결과를 출력하도록 진행
+        catch(InsufficientBalanceException e) { // 체크 예외
+            // InsufficientBalanceException에 담긴 인출 가능한 잔고금액 정보를 가져옴
+            BigDecimal avai lFunds = e.getAvailFunds();
+            ...
+            // 잔고 부족 안내 메시지를 준비하고 이를 출력하도록 진행
+        }
+      ```
+
+### 4.1.5. SQLException은 어떻게 되었나?
+
+* SQLException은 복구 가능한 예외인가?
+  * 99%의 경우 코드 레벨에서 복구할 방법이 없음
+  * 대부분의 발생이유
+    * 프로그램의 오류 또는 개발자의 부주의
+      * SQL 문법이 틀림
+      * 제약조건 위반  
+    * 통제할 수 없는 외부상황
+      * DB 서버 다운
+      * 네트워크 불안정
+      * DB 커넥션 풀이 꽉 참
+  * 결국 관리자나 개발자에게 예외 발생을 알리는 방법 밖에 없음
+  * SQLException을 잡아서 무언가 처리할 것이 거의 없음
+  * 가능한한 의미있는 언체크/런타임 예외로 전환해서 던지는 것이 나음
+  * 스프링은 JdbcTemplate에서 이와같은 예외처리 전략을 따름
+    * **(중요!)SQLException을 런타임 예외 DataAccessException으로 포장해 던짐**
+    * 스프링을 사용하는 측은 꼭 필요한 경우에만 catch 해서 처리하면 됨
