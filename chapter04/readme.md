@@ -419,3 +419,38 @@
     * JDBC 에는 BadSqlGrammerException
     * 하이버네이트 에서는 HibernateQueryException / TypeMismatchDataAccessException
 * **결국 인터페이스 사용, 런타임 예외 전환과 함께 DataAccessException 예외 추상화를 적용하면 데이터 액세스 기술과 구현 방법에 독립적인 이상적인 DAO를 만들수 있다**
+
+### 4.2.4. 기술에 독립적인 UesrDao 만들기
+
+* 인터페이스 적용
+  * 지금까지 만들어왔던 UserDao를 인터페이스와 구현으로 분리하자
+  * 인터페이스 명명법
+    * 이름 앞에 'I'라는 접두어를 붙이는 방법
+    * 인터페이스의 이름을 단순하게 하고 구현 클래스는 각각의 특징을 따르는 이름을 붙이는 경우
+  * 후자의 명명법을 따라 구현해보자!
+    * 안터페이스는 UserDao
+    * JDBC 기술 사용 DAO는 UserDaoJdbc
+
+```java
+public interface UserDao {
+    void add(User user);
+    User get(String id);
+    List<User> getAll();
+    void deleteAll();
+    int getCount();
+}
+```
+
+* 테스트 보완
+
+  ```java
+    public class UserDaoTest {
+        @Autowired
+        private UserDao dao; // UserDaoJdbc로 변경해야 하나?
+    }
+  ```
+
+  * @Autowired 는 스프링의 컨텍스트 내에서 정의된 빈 중에서 인스턴스 변수에 주입 가능한 타입의 빈을 찾아줌
+  * UserDao는 UserDAoJdbc가 구현한 인터페이스이므로 UserDaoTest의 dao 변수에 UserDaoJdbc클래스로 정의된 빈을 넣는데 아무런 문제가 없음
+  * 구현 기술에 상관없이 DAO의 기능이 동작하는데만 관심이 있다면, UserDao 인터페이스로 받아서 테스트하는 것이 낫다
+  ![UserDao 인터페이스의 구현의 분리](images/4-4.PNG)
