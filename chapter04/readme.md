@@ -337,3 +337,85 @@
     ```
 
     * 즉 이말은 에러 코드와 상태 코드는 표준화되 되어 있지 않아 DB에 독립적인 코드 작성이 불가능하다
+
+### 4.2.2. DB 에러 코드 매핑을 통한 전환
+
+* 스프링은 DataAccessException 이라는 SQLException을 대체할 수 있는 런타임 예외를 정의
+* DataAccessException의 서브클래스로 세분화된 예외 클래스들을 정의
+  * SQL문법이 틀리면 발생 - BadSqlGrammerException
+  * DB 커넥션을 가져오지 못했을 때 - DataAccessResourceFailureException
+  * 데이터 제약조건을 위배했거나 일관성을 지키지 않는 작업을 수행했을 때 - DataIntegrityViolationException
+  * 그 중 중복 키 때문에 발생한 경우 - DuplicationKeyException
+* 문제는 DB마다 에러 코드가 원인은 같아도 다 제각각이라는 점
+  * 스프링은 이런 문제를 대신 해결한다
+  * 스프링은 DB별 에러 코드를 분류해서 스프링이 정의한 예외 클래스를 매핑해 놓은 에러코드 매핑정보 테이블을 만들어두고 이를 이용함
+  * DB의 에러코드를 DataAccessException 계층구조의 클래스 중 하나로 매핑해줌
+  * 결국 DB 가 달라져도 같은 종류의 에러라면 동일한 예외를 받을 수 있다.
+* JdbcTemplate은 체크 예외인 SQLException을 런타임 예외인 DataAccessException 계층구조의 예외로 포장해주기 때문에 add() 메소드에는 예외 포장을 위한 코드가 따로 필요 없음
+* 또, DB의 종류에 상관없이 중복 키로 인해 발생하는 에러는 DataAccessException의 서브클래스인 DuplicateKeyException으로 매핑돼서 던져짐
+* add()메소드를 사용하는 쪽에서 중복 키 상황에 대한 대응이 필요한 경우에 참고할 수 있도록 DuplicateKeyException을 메소드 선언에 넣어주면 편리하다.
+
+```java
+    public void add() throws DuplicateKeyException {
+        // JdbcTemplate을 이용해 User를 add 하는 코드
+    }
+```
+
+* 중복키 에러를 (직접 강제 정의하는) 체크 예외로 만들고 싶다면? 다시 예외를 전환해 주는 코드를 DAO 에 넣어준다
+
+```java
+    public void add() throws DuplicateUserIdException {
+        try {
+            // jdbcTempate을 이용해 User를 add 하는 코드
+        }
+        catch(DuplicateKeyException e) {
+            throw new DuplicateUserIdException(e);
+        }
+    }
+```
+
+### 4.2.3. DAO 인터페이스와 DataAccessException 계층구조
+
+* DataAccessException은 JDBC 예외 뿐만 아니라 자바 데이터 엑세스 기술에서 발생하는 예외에도 적용된다.
+  * JDO
+  * JPA
+  * 하이버네이트
+  * myBatis
+* DataAccessException은 데이터 엑세스 기술의 종류와 상관없이 일관된 예외가 발생하도록 함. 즉 엑세스 기술에 독립적인 추상화된 예외 제공
+
+* DAO 인터페이스와 구현의 분리
+* DAO를 굳이 따로 만들어서 사용하는 이유?
+  * 데이터 엑세스 로직을 담은 코드를 성격이 다른 코드에서 분리해놓기 위해서
+  * 분리된 DAO는 전략 패턴을 적용해 구현 방법을 변경해서 사용할 수 있게 만들기 위함
+  * DAO를 사용하는 쪽에서 DAO가 내부에서 어떤 데이터 기술을 사용하는지 신경 쓰지 않아도 됨
+* 그런데 DAO의 사용 기술과 구현 코드는 전략 패턴과 DI를 통해 DAO를 사용하는 클라이언트에게 감출 수 있으나, 메소드 선언에 나타나는 **예외정보**가 문제가 될 수 있다.
+* 기술에 독립적인 이상적인 DAO
+
+```java
+    public interface UserDao {
+        public void add(User user); //이렇게 선언하는 것이 가능한가?
+    }
+```
+
+* 문제는 예외가 기술 독립적으로 인터페이스 선언 하지 못하도록 되어있다.
+
+```java
+    public void add(User user) throws PersistentException // JPA
+    public void add(User user) throws PersistentException // Hibernate
+    public void add(User user) throws PersistentException // JDO
+    ...
+```
+
+* 해결책이 있을까?
+  * throw Exception으로 다 바꾼다?
+    * 무책임한 선언이다.
+  * 다행히 JDO, Hibernate, JPA 등의 기술은 런타임 예외를 사용함 throws를 사용할 필요 없음
+  * SQLException을 런타임 예외로 포장해서 던지면 맨 처음 throws가 없는 인터페이스로 선언해도 됨
+  * 그러나, 모든 예외를 다 무시해야 하는 것은 아님. 애플리케이션에서는 사용하지 않더라도 시스템 레벨에서 데이터 엑세스 예외를 의미 있게 분류할 필요 있음
+
+* 데이터 액세스 예외 추상화와 DataAccessException 계층 구조
+  * 스프링은 자바의 다양한 데이터 액세스 기술을 사용할 때 발생하는 예외들을 추상화해서 DataAccessException 계층 구조 안에 정리함
+  * 예를 들어 데이터 엑세스 기술을 부정확하게 사용했을 경우 InvalidDataAccessResourceUsageException 이 던져짐.
+    * JDBC 에는 BadSqlGrammerException
+    * 하이버네이트 에서는 HibernateQueryException / TypeMismatchDataAccessException
+* **결국 인터페이스 사용, 런타임 예외 전환과 함께 DataAccessException 예외 추상화를 적용하면 데이터 액세스 기술과 구현 방법에 독립적인 이상적인 DAO를 만들수 있다**
