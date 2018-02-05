@@ -453,4 +453,46 @@ public interface UserDao {
   * @Autowired 는 스프링의 컨텍스트 내에서 정의된 빈 중에서 인스턴스 변수에 주입 가능한 타입의 빈을 찾아줌
   * UserDao는 UserDAoJdbc가 구현한 인터페이스이므로 UserDaoTest의 dao 변수에 UserDaoJdbc클래스로 정의된 빈을 넣는데 아무런 문제가 없음
   * 구현 기술에 상관없이 DAO의 기능이 동작하는데만 관심이 있다면, UserDao 인터페이스로 받아서 테스트하는 것이 낫다
+  * 반면 특정 기술을 사용한 UserDao의 구현 내용에 관심을 가지고 테스트하려면 @Autowired로 DI 받을때 UserDaoJdbc 나 UserDaoHibernate 같이 특정 타입을 사용하는 것이 나음
+
   ![UserDao 인터페이스의 구현의 분리](images/4-4.PNG)
+
+  * 테스트는 하나의 클라이언트 코드라고 생각하자
+  * DataAccessException이 발생하면 성공하는 테스트 코드, 예외 발생하지 않으면 실패한다.
+
+  ```java
+  @Test(expected=DataAccessException.class)
+  public void duplicateKey() {
+      dao.deleteAll();
+
+      dao.add(user1);
+      dao.add(user1);
+  }
+  ```
+
+* DataAccessException 활용 시 주의사항
+  * 하위 예외인 DuplicationKeyException이 DB종류나 데이터 엑세스 기술에 상관없이 발생하지 않음. JDBC를 사용하는 경우에만 발생함
+  * DataAccessException이 기술에 상관없이 어느 정도 추상화된 공통 예외로 변환해주긴 하지만 근본적인 한계 때문에 완벽하다고 기대할수 없음. 따라서 사용에 주의를 기울여야 함
+  * 미리 학습테스트를 만들어서 실제 전환되는 예외의 종류를 확인해두어야 함
+  * 실제 학습테스트 코드
+
+  ```java
+  @Autowired
+  private DataSource dataSource;
+
+  ...
+
+  @Test
+  public void sqlExceptionTranslate() {
+      dao.deleteAll();
+
+      try {
+          dao.add(user1);
+          dao.add(user1);
+      } catch(DuplicateKeyException ex) {
+          SQLException sqlEx = (SQLException) ex.getRootCause();
+          SQLExceptionTranslator set = new SQLErrorCodeSQLExceptionTranslator(this.dataSource);
+          assertThat(set.translate(null, null, sqlEx),is(DuplicateKeyException.class));
+      }
+  }
+  ```
