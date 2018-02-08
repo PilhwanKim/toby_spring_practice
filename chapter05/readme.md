@@ -71,8 +71,18 @@
   * UserDaoJdbc는 적당하지 않음. DAO는 데이터를 어떻게 가져오고 조작할지를 다루는 곳.
   * 사용자 관리 비즈니스 로직을 담을 클래스를 하나 추가함.
   * 클래스 이름은 UserService로 함
-* UserService 클래스와 빈 등록(소스코드 참조)
-* UserServiceTest 테스트 클래스(소스코드 참조)
-* upgradeLevels() 메소드(소스코드 참조)
-* upgradeLevels() 테스트(소스코드 참조)
+* UserService 클래스와 빈 등록 (소스코드 참조)
+* UserServiceTest 테스트 클래스 구현 (소스코드 참조)
+* upgradeLevels() 메소드 구현 (소스코드 참조)
+* upgradeLevels() 테스트 구현 (소스코드 참조)
   * 가능한 모든 조건을 하나씩 확인해보는 픽스처를 마련함
+
+### 5.1.4. UserService.add()
+
+* 아직 한가지 요구사항이 개발되지 않음 - 처음 가입하는 사용자는 기본적으로 BASIC 레벨이어야 한다
+* 이 로직을 담을 위치는?
+  * UserDaoJdbc.add() 는 적합하지 않음. UserDaoJdbc는 User 오브젝트를 DB에 정보를 넣고 읽는 방법에만 관심을 가져야지, 비즈니스적인 의미를 지닌 정보를 설정하는 책임을 지는 것이 바람직하지 않음
+  * User 클래스에서 아예 level 필드를 Level.BASIC으로 초기화하기. 그러나 처음 가입할 때 제외하고 무의미한 정보인데 단지 이 로직을 담기위해 클래스에 직접 초기화는 문제가 있음
+  * 결론? UesrService에서 해결
+* UserService.add() 테스트 구현 (소스코드 참조)
+* UserService.add() 메소드 구현 (소스코드 참조)
